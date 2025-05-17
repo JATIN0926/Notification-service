@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api:
+    build: .
+    command: node src/server.js
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - rabbitmq
+
+  consumer:
+    build: .
+    command: node src/queue/consumer.js
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq

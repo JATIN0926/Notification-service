@@ -10,33 +10,29 @@ const MAX_RETRIES = 3;
 
 export const startConsumer = async () => {
   try {
-    // ✅ DB connect
     await connectDB();
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
-    // ✅ RabbitMQ connect
-    const connection = await amqp.connect("amqp://localhost");
+    const connection = await amqp.connect("amqp://rabbitmq");
     const channel = await connection.createChannel();
     await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-    console.log("🎯 Waiting for messages in queue...");
+    console.log(" Waiting for messages in queue...");
 
-    // ✅ Consumer start
     channel.consume(
       QUEUE_NAME,
       async (msg) => {
-        console.log("📩 Message received from queue");
+        console.log("Message received from queue");
         const data = JSON.parse(msg.content.toString());
-        const { userId, type, message, retryCount = 0 } = data;
+        const { notificationId, userId, type, message, retryCount = 0 } = data;
 
         console.log(
-          `➡️  Processing notification for user: ${userId}, type: ${type}`
+          `Processing notification for user: ${userId}, type: ${type}`
         );
 
         let status = "failed";
 
         try {
-          // ✅ Fetch user from DB
           const user = await User.findById(userId);
           if (!user) throw new Error(`User not found: ${userId}`);
 
@@ -45,25 +41,25 @@ export const startConsumer = async () => {
 
           if (type === "email") {
             if (!email) throw new Error("User email missing.");
-            console.log(`📧 Sending email to ${email}`);
+            console.log(`Sending email to ${email}`);
             await sendEmail(email, "New Notification", message);
           } else if (type === "sms") {
             if (!phone) throw new Error("User phone missing.");
-            console.log(`📱 Sending SMS to ${phone}`);
+            console.log(` Sending SMS to ${phone}`);
             await sendSMS(phone, message);
           } else {
-            console.log("📲 In-app notification assumed sent");
+            console.log("In-app notification assumed sent");
           }
 
           status = "sent";
         } catch (err) {
           console.error(
-            `❌ Failed to send notification (try ${retryCount + 1}):`,
+            `Failed to send notification (try ${retryCount + 1}):`,
             err
           );
 
           if (retryCount < MAX_RETRIES) {
-            console.log("🔁 Requeuing message for retry...");
+            console.log("Requeuing message for retry...");
             channel.sendToQueue(
               QUEUE_NAME,
               Buffer.from(
@@ -75,10 +71,17 @@ export const startConsumer = async () => {
         }
 
         try {
-          await Notification.create({ userId, type, message, status });
-          console.log(`✅ Notification saved with status: ${status}`);
+          if (notificationId) {
+            await Notification.findByIdAndUpdate(notificationId, { status });
+            console.log(
+              `Notification ${notificationId} updated with status: ${status}`
+            );
+          } else {
+            await Notification.create({ userId, type, message, status });
+            console.log("Notification created without ID (fallback)");
+          }
         } catch (dbErr) {
-          console.error("❌ Failed to save notification to DB:", dbErr);
+          console.error("Failed to update/save notification to DB:", dbErr);
         }
 
         channel.ack(msg);
@@ -86,9 +89,8 @@ export const startConsumer = async () => {
       { noAck: false }
     );
   } catch (err) {
-    console.error("❌ Consumer failed to start:", err);
+    console.error("Consumer failed to start:", err);
   }
 };
 
-// ✅ Automatically start consumer when this file runs
 startConsumer();

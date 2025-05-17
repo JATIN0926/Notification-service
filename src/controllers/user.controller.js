@@ -15,7 +15,6 @@ const getUserNotifications = asyncHandler(async (req, res, next) => {
     createdAt: -1,
   });
 
-  // Respond with notifications
   res.status(200).json(new ApiResponse(200, notifications));
 });
 
