@@ -1,37 +1,42 @@
-import Notification from '../models/notification.model.js';
-import { ApiError } from '../utils/ApiError.js';
-import { ApiResponse } from '../utils/ApiResponse.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import Notification from "../models/notification.model.js";
+import User from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import sendEmail from "../services/email.service.js";
+import sendSMS from "../services/sms.service.js";
+import { publishToQueue } from "../queue/publisher.js";
 
-// POST /notifications
-const sendNotification = asyncHandler(async (req, res, next) => {
+const sendNotification = asyncHandler(async (req, res) => {
   const { userId, type, message } = req.body;
 
-  // Basic validation
   if (!userId || !type || !message) {
-    throw new ApiError(400, 'userId, type, and message are required');
+    throw new ApiError(400, "userId, type, and message are required");
   }
 
-  if (!['email', 'sms', 'in-app'].includes(type)) {
-    throw new ApiError(400, 'Invalid notification type');
+  if (!["email", "sms", "in-app"].includes(type)) {
+    throw new ApiError(400, "Invalid notification type");
   }
 
   if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
-    throw new ApiError(400, 'Invalid user ID format');
+    throw new ApiError(400, "Invalid user ID format");
   }
 
-  // Create notification (initial status 'pending')
-  const notification = await Notification.create({
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  await publishToQueue({
     userId,
     type,
     message,
-    status: 'pending',
+    retryCount: 0,
   });
 
-  // For now, we just save it without sending real email/sms
-  // Later, you can add sending logic here or in a worker queue
-
-  res.status(201).json(new ApiResponse(201, notification, 'Notification created successfully'));
+  res
+    .status(202)
+    .json(new ApiResponse(202, null, "Notification queued successfully"));
 });
 
 export { sendNotification };

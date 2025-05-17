@@ -4,11 +4,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// GET /users/:id/notifications
 const getUserNotifications = asyncHandler(async (req, res, next) => {
   const userId = req.params.id;
 
-  // Validate userId format
   if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
     throw new ApiError(400, "Invalid user ID format");
   }
@@ -26,6 +24,10 @@ const createUser = asyncHandler(async (req, res, next) => {
 
   if (!name || !email || !phone) {
     throw new ApiError(400, "name, email and phone are required");
+  }
+
+  if (!/^\+91\d{10}$/.test(phone)) {
+    throw new ApiError(400, "Phone number must be in +91XXXXXXXXXX format");
   }
 
   // Check if user already exists by email or phone (optional)
