@@ -16,6 +16,8 @@ services:
       - "3000:3000"
     depends_on:
       - rabbitmq
+    env_file:
+      - .env
 
   consumer:
     build: .
@@ -24,5 +26,5 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
-    environment:
-      - RABBITMQ_URL=amqp://rabbitmq
+    env_file:
+      - .env
