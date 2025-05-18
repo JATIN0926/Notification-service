@@ -58,6 +58,11 @@ This project implements a notification service with:
 
 Create a new user to whom notifications can be sent.
 
+🔗 **Example URL:**  
+`https://notification-backend-jbmh.onrender.com/users/create-user`
+
+---
+
 ### ✅ Request Body
 
 ```json
@@ -93,7 +98,7 @@ Create a new user to whom notifications can be sent.
 
 Send a notification (email, SMS, or in-app).
 
-🔗 **URL:**  
+🔗 **Example URL:**  
 `https://notification-backend-jbmh.onrender.com/notifications`
 
 ---
@@ -123,6 +128,9 @@ Send a notification (email, SMS, or in-app).
   "success": true
 }
 ```
+
+🧾 Note:
+If you select email or sms as the notification type, you will actually receive a real email or SMS on your configured address/number. However, if you select in-app, the message will just be stored in the database — no real notification will be sent.
 
 ## 📌 3. Get All Notifications for a User
 
