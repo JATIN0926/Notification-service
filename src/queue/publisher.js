@@ -3,7 +3,8 @@ import amqp from "amqplib";
 const QUEUE_NAME = "notification_queue";
 
 export const publishToQueue = async (message) => {
-  const connection = await amqp.connect("amqp://rabbitmq");
+  const connection = await amqp.connect(process.env.RABBITMQ_URL);
+
 
   const channel = await connection.createChannel();
   await channel.assertQueue(QUEUE_NAME, { durable: true });
