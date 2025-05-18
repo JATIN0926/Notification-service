@@ -193,7 +193,7 @@ Fetch all notifications sent to a specific user.
 Returns the current status of a specific notification.
 
 🔗 **Example URL:**  
-`http://localhost:3000/notifications/6828d59f33e30d6b9041c21d/status`
+`https://notification-backend-jbmh.onrender.com/notifications/6828d59f33e30d6b9041c21d/status`
 
 ---
 
