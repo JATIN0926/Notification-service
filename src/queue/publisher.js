@@ -1,5 +1,7 @@
 import amqp from "amqplib";
+import dotenv from "dotenv";
 
+dotenv.config();
 const QUEUE_NAME = "notification_queue";
 
 export const publishToQueue = async (message) => {

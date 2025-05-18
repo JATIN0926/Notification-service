@@ -4,6 +4,9 @@ import sendSMS from "../services/sms.service.js";
 import Notification from "../models/notification.model.js";
 import connectDB from "../config/db.js";
 import User from "../models/user.model.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const QUEUE_NAME = "notification_queue";
 const MAX_RETRIES = 3;
